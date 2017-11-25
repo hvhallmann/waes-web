@@ -15,7 +15,43 @@ router.get('/diff/:id', (req, res) => {
   res.status(200).send(`respond with a resource result ${123}`);
 });
 
+function decode(data) {
+  return (new Buffer(data, 'base64')).toString();
+}
+
+function decodeJs(data) {
+  return JSON.parse((new Buffer(data, 'base64')).toString());
+}
+
+function createFile(direction, name, content) {
+  console.log('cont', content);
+  fs.writeFileSync(path.resolve(__dirname, '../assets/', `${name}-${direction}`), content);
+}
+
 router.post('/diff/:id/left', (req, res) => {
+  let size = 0;
+  let file = '';
+
+  req.on('data', (data) => {
+    size += data.length;
+    file += data.toString();
+    console.log('Got chunk: ' + data.length + ' total: ' + size);
+  });
+
+  req.on('end', () => {
+    console.log('total size = ' + size);
+    console.log('file', file);
+    createFile('left', req.params.id, decode(file));
+    res.end('Thanks');
+  });
+
+  req.on('error', (e) => {
+      console.log("ERROR ERROR: " + e.message);
+  });
+});
+
+router.post('/diff/:id/old/left', (req, res) => {
+  console.log('the body is', req.body);
   const encoded = Buffer.from(JSON.stringify(req.body)).toString('base64');
   console.log(encoded);
   fs.writeFileSync(path.resolve(__dirname, '../assets/', `${req.params.id}-left`), encoded, {
@@ -25,23 +61,31 @@ router.post('/diff/:id/left', (req, res) => {
   res.status(200).send('respond with a resource left');
 });
 
-router.post('/diff/:id/right', (req, res) => {
-  const encoded = Buffer.from(req.body.toString('base64'));
-  fs.writeFileSync(path.resolve(__dirname, '../assets/', `${req.params.id}-rights`), encoded, {
-    encoding: 'base64',
-  });
-  console.log(Buffer.from(encoded, 'base64').toString());
+router.post('/diff/:id/old/right', (req, res) => {
+  console.log('the body is', req.body);
+  const jsonStr = JSON.stringify(req.body);
+  console.log('the json is', jsonStr);
+  createFile('right', req.params.id, decode(jsonStr));
   res.status(200).send('respond with a resource right');
 });
 
-function decode(data) {
-  return (new Buffer(data, 'base64')).toString();
-}
+router.post('/diff/:id/right', (req, res) => {
+  let file = '';
 
-function createFile(direction, content) {
-  fs.writeFileSync(path.resolve(__dirname, '../assets/', `${req.params.id}-${direction}`), content);
-}
+  req.on('data', (data) => {
+    file += data.toString();
+  });
 
+  req.on('end', () => {
+    console.log('file', file);
+    createFile('right', req.params.id, decode(file));
+    res.end('Thanks');
+  });
+
+  req.on('error', (e) => {
+    console.error("ERROR ERROR: " + e.message);
+  });
+});
 
 router.post('/diff/:id/xdecode', (req, res) => {
   console.log('the body is', req.body);
@@ -89,6 +133,28 @@ router.post('/diff/:id/create2', (req, res) => {
   });
   console.log(Buffer.from(encoded, 'base64').toString());
   res.status(200).send('respond with a resource right');
+});
+
+router.post('/diff/:id/binar', (req, res) => {
+  var size = 0;
+  let file = '';
+
+  req.on('data', function (data) {
+    size += data.length;
+    file += data.toString();
+    console.log('Got chunk: ' + data.length + ' total: ' + size);
+  });
+
+  req.on('end', function () {
+    console.log('total size = ' + size);
+    console.log('file', file);
+    res.end('Thanks');
+  });
+
+  req.on('error', function(e) {
+      console.log("ERROR ERROR: " + e.message);
+  });
+  // res.status(200).send('respond with a resource right');
 });
 
 // golden rule
