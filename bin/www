@@ -5,6 +5,8 @@
  */
 
 const app = require('../app');
+// to debug start the app with
+// DEBUG=myapp:* npm start
 const debug = require('debug')('waes-web:server');
 const http = require('http');
 
