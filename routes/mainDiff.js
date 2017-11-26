@@ -1,26 +1,26 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const change = require('diff-json');
+const decoder = require('../lib/decoder');
 
 const router = express.Router();
 
 /* GET users listing. */
 router.get('/diff/:id', (req, res) => {
-  const data = fs.readFileSync(path.resolve(__dirname, '../assets/', `${req.params.id}-right`), {
-    encoding: 'base64',
-  });
-  const decoded = Buffer.from(data, 'base64').toString();
-  console.log('decoded', decoded);
+  const dataRight = fs.readFileSync(path.resolve(__dirname, '../assets/', `${req.params.id}-right`));
+  const dataLeft = fs.readFileSync(path.resolve(__dirname, '../assets/', `${req.params.id}-left`));
+
+  const dRight = JSON.parse(dataRight);
+  const dLeft = JSON.parse(dataLeft);
+  const result = change.diff(dLeft, dRight);
+  console.log('res', result);
 
   res.status(200).send(`respond with a resource result ${123}`);
 });
 
 function decode(data) {
   return (new Buffer(data, 'base64')).toString();
-}
-
-function decodeJs(data) {
-  return JSON.parse((new Buffer(data, 'base64')).toString());
 }
 
 function createFile(direction, name, content) {
@@ -50,24 +50,24 @@ router.post('/diff/:id/left', (req, res) => {
   });
 });
 
-router.post('/diff/:id/old/left', (req, res) => {
-  console.log('the body is', req.body);
-  const encoded = Buffer.from(JSON.stringify(req.body)).toString('base64');
-  console.log(encoded);
-  fs.writeFileSync(path.resolve(__dirname, '../assets/', `${req.params.id}-left`), encoded, {
-    encoding: 'base64',
-  });
-  console.log(Buffer.from(encoded, 'base64').toString());
-  res.status(200).send('respond with a resource left');
-});
+// router.post('/diff/:id/old/left', (req, res) => {
+//   console.log('the body is', req.body);
+//   const encoded = Buffer.from(JSON.stringify(req.body)).toString('base64');
+//   console.log(encoded);
+//   fs.writeFileSync(path.resolve(__dirname, '../assets/', `${req.params.id}-left`), encoded, {
+//     encoding: 'base64',
+//   });
+//   console.log(Buffer.from(encoded, 'base64').toString());
+//   res.status(200).send('respond with a resource left');
+// });
 
-router.post('/diff/:id/old/right', (req, res) => {
-  console.log('the body is', req.body);
-  const jsonStr = JSON.stringify(req.body);
-  console.log('the json is', jsonStr);
-  createFile('right', req.params.id, decode(jsonStr));
-  res.status(200).send('respond with a resource right');
-});
+// router.post('/diff/:id/old/right', (req, res) => {
+//   console.log('the body is', req.body);
+//   const jsonStr = JSON.stringify(req.body);
+//   console.log('the json is', jsonStr);
+//   createFile('right', req.params.id, decode(jsonStr));
+//   res.status(200).send('respond with a resource right');
+// });
 
 router.post('/diff/:id/right', (req, res) => {
   let file = '';
