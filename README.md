@@ -1,4 +1,4 @@
-# waes-web
+# JSON-DIFF-web
 Created to show my coding skills
 
 
