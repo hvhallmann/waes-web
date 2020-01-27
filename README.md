@@ -37,5 +37,3 @@ your two files will be analysed after that and an response in JSON format will b
 - Include an database instead of using files to parse files.
 - identify the format of the file the user is sending
 - improve error handling
-- from the test specification, it will be better if there is an file to work with
-since the beginning, like an example. 
